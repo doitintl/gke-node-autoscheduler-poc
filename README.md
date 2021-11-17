@@ -1,4 +1,4 @@
-# GKE node-pool scaling scheduler
+# GKE node autoscheduler POC
 
 This repository contains a minimal POC implementation for demonstrating a node-pool scaling scheduler by using GKE node auto-provisioning and kubernetes cron jobs.
 
@@ -110,6 +110,20 @@ kubectl scale deployment.apps/api-demo-v3 --replicas=0
 6. After scale dow
 
 ![after-scale-down](./images/after-scale-down.png)
+
+## Limitations
+
+1. There is no Google Cloud region has GPUs in all zones. So, we have to initialise node-pool for a single zone with supported accelerator type.
+https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#gpu_regional_cluster
+
+2. In order to enable auto-provisioning with GPUs, we need to install NVIDIA's device drivers to the node.
+https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#installing_drivers
+
+3. `CRON_TZ=<timezone>` prefix is not available yet until version 1.22. Currently, the latest GKE version is 1.21.5.
+* https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#cron-schedule-syntax
+* https://stackoverflow.com/questions/68950893/how-can-i-specify-cron-timezone-in-k8s-cron-job
+
+So, you have to use UTC timezone in current GKE version.
 
 ## References
 
