@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api-demo-v3
+  name: api-demo-v3
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: api-demo-service-v3
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: api-demo-service-v3
+    spec:
+      containers:
+      - image: docker.io/kdeng/app-demo:java-v3
+        imagePullPolicy: Always
+        name: api-demo-v3
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1280Mi
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: "1"
+            memory: 1280Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      nodeSelector:
+        cloud.google.com/gke-nodepool: gpu-node-pool
+      # tolerations:
+      #   - key: dedicated
+      #     operator: Equal
+      #     value: gpu
+      #     effect: NoSchedule
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30

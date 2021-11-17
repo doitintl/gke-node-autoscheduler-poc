@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cron-scheduler
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cron-scheduler-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: cron-scheduler
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gpu-service-up-cronjob
+spec:
+  # UTC timezone - NZST (with daylight) - 8am
+  schedule: "0 19 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cron-scheduler
+          containers:
+            - name: gpu-job-up-container
+              image: bitnami/kubectl:latest
+              args: ["scale", "deployment/api-demo-v3", "--replicas=2"]
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gpu-service-down-cronjob
+spec:
+  # UTC Timezone - NZST (with daylight) - 5pm
+  schedule: "0 4 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cron-scheduler
+          containers:
+            - name: gpu-job-down-container
+              image: bitnami/kubectl:latest
+              args: ["scale", "deployment/api-demo-v3", "--replicas=0"]
+          restartPolicy: OnFailure
